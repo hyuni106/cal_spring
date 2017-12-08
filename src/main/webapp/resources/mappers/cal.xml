@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tje.cal_app.mappers.CalMapper">
+
+ <insert id="insert_new_user" parameterType="hashmap">
+ 	INSERT INTO user (id, login_id, login_pw, name, nickname, birth) VALUES(null, #{user_id}, #{password}, #{name}, #{nickname}, #{birth})
+ </insert>
+ 
+ <select id="select_login_user" resultType="hashmap" parameterType="hashmap">
+ 	SELECT id, login_id, name, nickname, birth FROM user WHERE login_id = #{user_id} AND login_pw = #{password}
+ </select>
+ 
+ <select id="select_exist_id" resultType="hashmap" parameterType="hashmap">
+ 	SELECT id, login_id, name, nickname, birth FROM user WHERE login_id = #{user_id}
+ </select>
+ 
+ <select id="select_user_group" resultType="hashmap" parameterType="int">
+ 	SELECT `group`.* FROM `group` JOIN participant ON participant.group_id = `group`.id WHERE participant.participant_user_id = #{user_id} AND participant.status = 1
+ </select>
+ 
+ <insert id="insert_new_group" parameterType="hashmap" useGeneratedKeys="true" keyProperty="id">
+ 	INSERT INTO `group` (id, name, comment, image_path) VALUES(null, #{name}, #{comment}, #{image_path})
+ </insert>
+ 
+ <select id="select_group_by_id" resultType="hashmap" parameterType="hashmap">
+ 	SELECT * FROM `group` WHERE id = #{group_id}
+ </select>
+ 
+ <insert id="insert_new_participant_create" parameterType="hashmap">
+ 	INSERT INTO participant (id, user_id, participant_user_id, group_id, status) VALUES(null, #{user_id}, #{participant_user_id}, #{group_id}, 1)
+ </insert>
+ 
+ <insert id="insert_new_participant" parameterType="hashmap">
+ 	INSERT INTO participant (id, user_id, participant_user_id, group_id, status) VALUES(null, #{user_id}, #{participant_user_id}, #{group_id}, 0)
+ </insert>
+ 
+ <select id="select_all_user" resultType="hashmap">
+ 	SELECT id, login_id, name, nickname, birth FROM user 
+ </select>
+ 
+ <select id="select_participant_by_user_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT * FROM participant JOIN user ON user.id = participant.user_id 
+ 	JOIN `group` ON `group`.id = participant.group_id
+	WHERE participant.participant_user_id = #{user_id}
+ </select>
+ 
+ <insert id="insert_new_schedule" parameterType="hashmap" useGeneratedKeys="true" keyProperty="id">
+ 	INSERT INTO schedule (id, title, tag, memo, start_date, end_date, location, `createdAt`, group_id, user_id) VALUES(null, #{title}, #{tag}, #{memo}, #{start_date}, #{end_date}, #{location}, NOW(), #{group_id}, #{user_id})
+ </insert>
+ 
+ <select id="select_schedule_by_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT id, title, tag, memo, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i:%s') AS start_date, DATE_FORMAT(end_date, '%Y-%m-%d %H:%i:%s') AS end_date, location, createdAt, group_id, user_id FROM schedule WHERE id = #{id}
+ </select>
+ 
+ <select id="select_schedule_by_group_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT id, title, tag, memo, DATE_FORMAT(start_date, '%Y-%m-%d %H:%i:%s') AS start_date, DATE_FORMAT(end_date, '%Y-%m-%d %H:%i:%s') AS end_date, location, createdAt, group_id, user_id FROM schedule WHERE group_id = #{group_id} ORDER BY schedule.start_date DESC
+ </select>
+
+ <insert id="insert_new_board" parameterType="hashmap" useGeneratedKeys="true" keyProperty="id">
+ 	INSERT INTO board (id, content, `createdAt`, user_id, group_id) VALUES(null, #{content}, NOW(), #{user_id}, #{group_id})
+ </insert>
+ 
+ <select id="select_board_by_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT id, content, user_id, group_id, DATE_FORMAT(createdAt, '%Y-%m-%d %H:%i:%s') AS createdAt FROM board WHERE id = #{id}
+ </select>
+ 
+ <select id="select_user_by_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT id, login_id, name, nickname, birth, device_token FROM user WHERE id = #{user_id}
+ </select>
+ 
+ <select id="select_board_by_group_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT id, content, user_id, group_id, DATE_FORMAT(createdAt, '%Y-%m-%d %H:%i:%s') AS createdAt FROM board WHERE group_id = #{group_id} ORDER BY board.`createdAt` DESC
+ </select>
+ 
+ <update id="update_group_name_and_comment" parameterType="hashmap">
+ 	UPDATE `group` SET name = #{name}, comment = #{comment} WHERE id = #{group_id}
+ </update>
+ 
+ <update id="update_user_nickname" parameterType="hashmap">
+ 	UPDATE user SET nickname = #{nickname} WHERE id = #{user_id}
+ </update>
+ 
+ <select id="select_alert" parameterType="hashmap" resultType="hashmap">
+ 	SELECT * FROM participant WHERE participant_user_id = #{user_id} AND NOT user_id = participant_user_id AND status = 0
+ </select>
+ 
+ <update id="update_participant_status" parameterType="hashmap">
+ 	UPDATE participant SET status = #{status} WHERE id = #{participant_id}
+ </update>
+ 
+ <select id="select_alert_count" parameterType="hashmap" resultType="hashmap">
+ 	SELECT count(*) AS count FROM participant WHERE participant_user_id = #{user_id} AND NOT user_id = participant_user_id AND status = 0
+ </select>
+ 
+ <insert id="insert_new_like" parameterType="hashmap">
+ 	INSERT INTO `like` (id, `createdAt`, user_id, board_id) VALUES(null, NOW(), #{user_id}, #{board_id})
+ </insert>
+ 
+ <select id="select_like_user_by_board_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT user.* FROM `like` JOIN user ON user.id = `like`.user_id WHERE board_id = #{id}
+ </select>
+ 
+ <delete id="delete_like" parameterType="hashmap">
+ 	DELETE FROM `like` WHERE board_id = #{board_id} AND user_id = #{user_id}
+ </delete>
+ 
+ <insert id="insert_new_commnet" parameterType="hashmap" useGeneratedKeys="true" keyProperty="id">
+ 	INSERT INTO comment (id, content, `createdAt`, user_id, board_id) VALUES(null, #{content}, NOW(), #{user_id}, #{board_id})
+ </insert>
+ 
+ <select id="select_comment_by_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT * FROM comment WHERE id = #{id}
+ </select>
+ 
+ <select id="select_comment_by_board_id" parameterType="hashmap" resultType="hashmap">
+ 	SELECT * FROM comment WHERE board_id = #{board_id}
+ </select>
+ 
+ <select id="select_participant_user" parameterType="hashmap" resultType="hashmap">
+ 	SELECT participant.* FROM user JOIN participant ON participant.participant_user_id = user.id WHERE participant.group_id = #{group_id} AND participant.status = 1
+ </select>
+ 
+ <select id="select_invite_participant_user" parameterType="hashmap" resultType="hashmap">
+ 	SELECT participant.* FROM user JOIN participant ON participant.participant_user_id = user.id WHERE participant.group_id = #{group_id} AND participant.status = 0
+ </select>
+ 
+</mapper>
